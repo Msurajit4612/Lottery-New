@@ -5,181 +5,245 @@
 <title>KAKDWIP SHUTTLE SHOWDOWN 2026</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#111;color:#fff;min-height:100vh;padding:20px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#111;color:#fff;min-height:100vh}
 
-h1{
-  color:#ffcc00;
-  text-align:center;
-  margin-bottom:15px;
-}
+.overlay{padding:20px;padding-bottom:180px;text-align:center}
+h1,h2{color:#ffcc00;margin:12px 0}
 
-.inputs{
-  max-width:900px;
-  margin:auto;
+.team-inputs{
+  max-width:900px;margin:auto;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
   gap:8px;
 }
+.team-inputs input{padding:8px;border-radius:6px;border:none}
 
-input{
-  padding:8px;
-  border-radius:6px;
-  border:none;
+.groups,.matches{
+  display:flex;gap:15px;
+  justify-content:center;flex-wrap:wrap;
 }
 
-button{
-  display:block;
-  margin:20px auto;
-  padding:12px 22px;
-  border:none;
-  border-radius:20px;
-  background:#ffcc00;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.groups{
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  flex-wrap:wrap;
-}
-
-.group{
-  width:260px;
+.group,.match-box{
+  width:280px;
   background:rgba(255,255,255,.12);
-  padding:12px;
-  border-radius:12px;
-}
-
-.group h2{
-  color:#ffcc00;
-  text-align:center;
-  margin-bottom:10px;
+  padding:14px;border-radius:12px;
 }
 
 ul{list-style:none}
-li{
-  padding:6px;
-  border-bottom:1px solid rgba(255,255,255,.3);
+li{padding:6px;border-bottom:1px solid rgba(255,255,255,.25)}
+
+.button-bar{
+  position:fixed;bottom:30px;width:100%;
+  background:#000;padding:10px;
+  display:flex;gap:6px;
+  justify-content:center;flex-wrap:wrap;z-index:1000;
 }
+
+button{
+  padding:10px 16px;border:none;
+  border-radius:20px;background:#ffcc00;
+  font-weight:bold;cursor:pointer;
+}
+button:disabled{background:#666}
+button.active{animation:blink 1s infinite}
+
+@keyframes blink{
+  0%{box-shadow:0 0 5px #ffcc00}
+  50%{box-shadow:0 0 18px #ffcc00}
+  100%{box-shadow:0 0 5px #ffcc00}
+}
+
+.loader{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.9);
+  display:none;align-items:center;
+  justify-content:center;flex-direction:column;
+  z-index:2000;
+}
+.shuttle{font-size:48px;animation:fly 1s infinite alternate}
+@keyframes fly{from{transform:translateX(-40px)}to{transform:translateX(40px)}}
 </style>
 </head>
 
 <body>
 
-<h1>🏸 KAKDWIP SHUTTLE SHOWDOWN 2026</h1>
+<div class="overlay">
+<h1>KAKDWIP SHUTTLE SHOWDOWN 2026</h1>
+<h2>🏸 Tournament Lottery & Fixture</h2>
 
-<div class="inputs" id="inputs"></div>
+<div class="team-inputs" id="teamInputs"></div>
 
-<button onclick="drawGroups()">Draw Groups</button>
-
+<h2 id="groupSection">Groups</h2>
 <div class="groups">
-  <div class="group"><h2>Group A</h2><ul id="A"></ul></div>
-  <div class="group"><h2>Group B</h2><ul id="B"></ul></div>
-  <div class="group"><h2>Group C</h2><ul id="C"></ul></div>
+  <div class="group"><h2>Group A</h2><ul id="groupA"></ul></div>
+  <div class="group"><h2>Group B</h2><ul id="groupB"></ul></div>
+  <div class="group"><h2>Group C</h2><ul id="groupC"></ul></div>
+</div>
+
+<h2 id="matchSection">🏸 Group Matches</h2>
+<div class="matches">
+  <div class="match-box"><h2>A</h2><ul id="matchA"></ul></div>
+  <div class="match-box"><h2>B</h2><ul id="matchB"></ul></div>
+  <div class="match-box"><h2>C</h2><ul id="matchC"></ul></div>
+</div>
+
+<h2 id="nextSection">🏆 Next Round</h2>
+<div class="matches">
+  <div class="match-box"><h2>A</h2><ul id="nextA"></ul></div>
+  <div class="match-box"><h2>B</h2><ul id="nextB"></ul></div>
+  <div class="match-box"><h2>C</h2><ul id="nextC"></ul></div>
+</div>
+
+<h2 id="superSection">🔥 Super Six</h2>
+<div class="matches">
+  <div class="match-box"><h2>Group E</h2><ul id="groupE"></ul></div>
+  <div class="match-box"><h2>Group F</h2><ul id="groupF"></ul></div>
+</div>
+</div>
+
+<div class="button-bar">
+  <button id="drawBtn" onclick="drawGroups()">Draw Groups</button>
+  <button id="matchBtn" onclick="groupMatches()" disabled>Group Matches</button>
+  <button id="nextBtn" onclick="nextRound()" disabled>Next Round</button>
+  <button id="superBtn" onclick="superSix()" disabled>Super Six</button>
+</div>
+
+<div class="loader" id="loader">
+  <div class="shuttle">🏸</div>
+  <p id="loaderText">Processing...</p>
 </div>
 
 <script>
-const MAX = 8;
-let groups = { A:[], B:[], C:[] };
+const teamInputs=document.getElementById("teamInputs");
+const loader=document.getElementById("loader");
+const loaderText=document.getElementById("loaderText");
+const matchBtn=document.getElementById("matchBtn");
+const nextBtn=document.getElementById("nextBtn");
+const superBtn=document.getElementById("superBtn");
+const MAX=8;
 
-// create 24 inputs
+let groups={A:[],B:[],C:[]};
+
 for(let i=1;i<=24;i++){
-  const inp=document.createElement("input");
+  let inp=document.createElement("input");
   inp.placeholder="Team "+i;
-  inputs.appendChild(inp);
+  teamInputs.appendChild(inp);
 }
 
-function shuffle(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
   }
+}
+
+function showLoader(text,cb){
+  loaderText.textContent=text;
+  loader.style.display="flex";
+  setTimeout(()=>{loader.style.display="none";cb();},700);
 }
 
 function drawGroups(){
   const teams=[...document.querySelectorAll("input")]
-    .map(i=>i.value.trim())
-    .filter(Boolean);
+    .map(i=>i.value.trim()).filter(Boolean);
 
   if(teams.length!==24){
-    alert("Please enter exactly 24 teams");
-    return;
+    alert("Enter exactly 24 teams");return;
   }
 
-  // reset
-  groups={A:[],B:[],C:[]};
+  showLoader("Drawing Groups...",()=>{
+    groups={A:[],B:[],C:[]};
+    const map={};
 
-  // prefix map (first 2 alphabets)
-  const prefixMap={};
-  teams.forEach(t=>{
-    const prefix=t.substring(0,2).toUpperCase();
-    if(!prefixMap[prefix]) prefixMap[prefix]=[];
-    prefixMap[prefix].push(t);
+    teams.forEach(t=>{
+      const p=t.substring(0,2).toUpperCase();
+      if(!map[p]) map[p]=[];
+      map[p].push(t);
+    });
+
+    let remaining=[];
+
+    Object.values(map).forEach(list=>{
+      shuffle(list);
+
+      while(list.length>=4){
+        const block=list.splice(0,4);
+        shuffle(block);
+        const g=["A","B","C"];shuffle(g);
+        const third=g[2];
+        groups[g[0]].push(block[0]);
+        groups[g[1]].push(block[1]);
+        groups[third].push(block[2],block[3]);
+      }
+
+      if(list.length===3){
+        ["A","B","C"].forEach((g,i)=>groups[g].push(list[i]));
+      }else if(list.length===2){
+        const g=["A","B","C"];shuffle(g);
+        groups[g[0]].push(list[0]);
+        groups[g[1]].push(list[1]);
+      }else if(list.length===1){
+        remaining.push(list[0]);
+      }
+    });
+
+    shuffle(remaining);
+    remaining.forEach(t=>{
+      const avail=["A","B","C"].filter(g=>groups[g].length<MAX);
+      groups[avail[Math.floor(Math.random()*avail.length)]].push(t);
+    });
+
+    renderGroups();
+    matchBtn.disabled=false;
   });
-
-  let remaining=[];
-
-  Object.values(prefixMap).forEach(list=>{
-    shuffle(list);
-
-    // ===== RULES =====
-    if(list.length===2){
-      const g=pickRandomGroups(2);
-      groups[g[0]].push(list[0]);
-      groups[g[1]].push(list[1]);
-    }
-
-    else if(list.length===3){
-      ["A","B","C"].forEach((g,i)=>groups[g].push(list[i]));
-    }
-
-    else if(list.length===4){
-      const twoGroups=pickRandomGroups(2);
-      const thirdGroup=["A","B","C"].find(g=>!twoGroups.includes(g));
-
-      groups[twoGroups[0]].push(list[0]);
-      groups[twoGroups[1]].push(list[1]);
-      groups[thirdGroup].push(list[2],list[3]);
-    }
-
-    else{
-      remaining.push(...list);
-    }
-  });
-
-  // fill remaining slots safely (8–8–8)
-  shuffle(remaining);
-  remaining.forEach(team=>{
-    const available=["A","B","C"].filter(g=>groups[g].length<MAX);
-    groups[available[Math.floor(Math.random()*available.length)]].push(team);
-  });
-
-  renderGroups();
-}
-
-function pickRandomGroups(n){
-  const g=["A","B","C"];
-  shuffle(g);
-  return g.slice(0,n);
 }
 
 function renderGroups(){
   ["A","B","C"].forEach(g=>{
-    const ul=document.getElementById(g);
-    ul.innerHTML="";
-    groups[g].forEach(t=>{
-      ul.innerHTML+=`<li>${t}</li>`;
-    });
+    document.getElementById("group"+g).innerHTML=
+      groups[g].map(t=>`<li>${t}</li>`).join("");
   });
+}
 
-  console.log(
-    "Group A:",groups.A.length,
-    "Group B:",groups.B.length,
-    "Group C:",groups.C.length
-  );
+function groupMatches(){
+  showLoader("Group Matches...",()=>{
+    ["A","B","C"].forEach(g=>{
+      let t=[...groups[g]];shuffle(t);
+      document.getElementById("match"+g).innerHTML=
+        `<li>${t[0]} 🆚 ${t[1]}</li>
+         <li>${t[2]} 🆚 ${t[3]}</li>
+         <li>${t[4]} 🆚 ${t[5]}</li>
+         <li>${t[6]} 🆚 ${t[7]}</li>`;
+    });
+    nextBtn.disabled=false;
+  });
+}
+
+function nextRound(){
+  showLoader("Next Round...",()=>{
+    ["nextA","nextB","nextC"].forEach(id=>{
+      document.getElementById(id).innerHTML=
+        `<li>Winner 1 🆚 Winner 2</li>
+         <li>Winner 3 🆚 Winner 4</li>`;
+    });
+    superBtn.disabled=false;
+  });
+}
+
+function superSix(){
+  showLoader("Super Six...",()=>{
+    let six=[
+      "Group A Winner","Group A Runner",
+      "Group B Winner","Group B Runner",
+      "Group C Winner","Group C Runner"
+    ];
+    shuffle(six);
+    document.getElementById("groupE").innerHTML=
+      six.slice(0,3).map(t=>`<li>${t}</li>`).join("");
+    document.getElementById("groupF").innerHTML=
+      six.slice(3).map(t=>`<li>${t}</li>`).join("");
+  });
 }
 </script>
 
