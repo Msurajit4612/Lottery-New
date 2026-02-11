@@ -5,134 +5,98 @@
 <title>KAKDWIP SHUTTLE SHOWDOWN 2026</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#111;color:#fff;min-height:100vh}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#111;color:#fff;min-height:100vh;padding:20px}
 
-.overlay{padding:20px;padding-bottom:180px;text-align:center}
-h1,h2{color:#ffcc00;margin:12px 0}
+h1{
+  color:#ffcc00;
+  text-align:center;
+  margin-bottom:15px;
+}
 
-.team-inputs{
-  max-width:900px;margin:auto;
+.inputs{
+  max-width:900px;
+  margin:auto;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:8px;
 }
-.team-inputs input{padding:8px;border-radius:6px;border:none}
 
-.groups,.matches{
-  display:flex;gap:15px;
-  justify-content:center;flex-wrap:wrap
-}
-
-.group,.match-box{
-  width:280px;
-  background:rgba(255,255,255,.12);
-  padding:14px;border-radius:12px
-}
-
-ul{list-style:none}
-li{padding:6px;border-bottom:1px solid rgba(255,255,255,.25)}
-
-.button-bar{
-  position:fixed;bottom:30px;width:100%;
-  background:#000;padding:10px;
-  display:flex;gap:6px;
-  justify-content:center;flex-wrap:wrap;
+input{
+  padding:8px;
+  border-radius:6px;
+  border:none;
 }
 
 button{
-  padding:10px 16px;border:none;border-radius:20px;
-  background:#ffcc00;font-weight:bold;cursor:pointer
+  display:block;
+  margin:20px auto;
+  padding:12px 22px;
+  border:none;
+  border-radius:20px;
+  background:#ffcc00;
+  font-weight:bold;
+  cursor:pointer;
 }
-button:disabled{background:#666}
 
-.loader{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.9);
-  display:none;align-items:center;
-  justify-content:center;flex-direction:column;
+.groups{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
 }
-.shuttle{font-size:48px;animation:fly 1s infinite alternate}
-@keyframes fly{from{transform:translateX(-40px)}to{transform:translateX(40px)}}
+
+.group{
+  width:260px;
+  background:rgba(255,255,255,.12);
+  padding:12px;
+  border-radius:12px;
+}
+
+.group h2{
+  color:#ffcc00;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+ul{list-style:none}
+li{
+  padding:6px;
+  border-bottom:1px solid rgba(255,255,255,.3);
+}
 </style>
 </head>
 
 <body>
 
-<div class="overlay">
-<h1>KAKDWIP SHUTTLE SHOWDOWN 2026</h1>
-<h2>🏸 Tournament Lottery & Fixture</h2>
+<h1>🏸 KAKDWIP SHUTTLE SHOWDOWN 2026</h1>
 
-<div class="team-inputs" id="teamInputs"></div>
+<div class="inputs" id="inputs"></div>
 
-<h2>Groups</h2>
+<button onclick="drawGroups()">Draw Groups</button>
+
 <div class="groups">
-  <div class="group"><h2>Group A</h2><ul id="groupA"></ul></div>
-  <div class="group"><h2>Group B</h2><ul id="groupB"></ul></div>
-  <div class="group"><h2>Group C</h2><ul id="groupC"></ul></div>
+  <div class="group"><h2>Group A</h2><ul id="A"></ul></div>
+  <div class="group"><h2>Group B</h2><ul id="B"></ul></div>
+  <div class="group"><h2>Group C</h2><ul id="C"></ul></div>
 </div>
-
-<h2>🏸 Group Matches</h2>
-<div class="matches">
-  <div class="match-box"><h2>A</h2><ul id="matchA"></ul></div>
-  <div class="match-box"><h2>B</h2><ul id="matchB"></ul></div>
-  <div class="match-box"><h2>C</h2><ul id="matchC"></ul></div>
-</div>
-
-<h2>🏆 Next Round</h2>
-<div class="matches">
-  <div class="match-box"><h2>A</h2><ul id="nextA"></ul></div>
-  <div class="match-box"><h2>B</h2><ul id="nextB"></ul></div>
-  <div class="match-box"><h2>C</h2><ul id="nextC"></ul></div>
-</div>
-
-<h2>🔥 Super Six</h2>
-<div class="matches">
-  <div class="match-box"><h2>Group E</h2><ul id="groupE"></ul></div>
-  <div class="match-box"><h2>Group F</h2><ul id="groupF"></ul></div>
-</div>
-</div>
-
-<div class="button-bar">
-  <button onclick="drawGroups()">Draw Groups</button>
-  <button id="matchBtn" onclick="groupMatches()" disabled>Group Matches</button>
-  <button id="nextBtn" onclick="nextRound()" disabled>Next Round</button>
-  <button id="superBtn" onclick="superSix()" disabled>Super Six</button>
-  <button onclick="exportPDF()">Export PDF</button>
-</div>
-
-<div class="loader" id="loader">
-  <div class="shuttle">🏸</div>
-  <p id="loaderText">Processing...</p>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-const teamInputs=document.getElementById("teamInputs");
-const loader=document.getElementById("loader");
-const loaderText=document.getElementById("loaderText");
+const MAX = 8;
+let groups = { A:[], B:[], C:[] };
 
-let groups={A:[],B:[],C:[]};
-const MAX=8;
-
+// create 24 inputs
 for(let i=1;i<=24;i++){
   const inp=document.createElement("input");
   inp.placeholder="Team "+i;
-  teamInputs.appendChild(inp);
+  inputs.appendChild(inp);
 }
 
-function shuffle(a){
-  for(let i=a.length-1;i>0;i--){
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
+    [arr[i],arr[j]]=[arr[j],arr[i]];
   }
-}
-
-function showLoader(text,cb){
-  loaderText.textContent=text;
-  loader.style.display="flex";
-  setTimeout(()=>{loader.style.display="none";cb();},700);
 }
 
 function drawGroups(){
@@ -141,112 +105,81 @@ function drawGroups(){
     .filter(Boolean);
 
   if(teams.length!==24){
-    alert("Enter exactly 24 teams");
+    alert("Please enter exactly 24 teams");
     return;
   }
 
-  showLoader("Drawing Groups...",()=>{
-    groups={A:[],B:[],C:[]};
+  // reset
+  groups={A:[],B:[],C:[]};
 
-    // group by prefix
-    const prefixMap={};
-    teams.forEach(t=>{
-      const p=t.substring(0,2).toUpperCase();
-      prefixMap[p]=(prefixMap[p]||[]);
-      prefixMap[p].push(t);
-    });
-
-    const leftovers=[];
-
-    Object.values(prefixMap).forEach(list=>{
-      shuffle(list);
-
-      if(list.length===2){
-        shuffle(["A","B","C"]).slice(0,2)
-          .forEach((g,i)=>groups[g].push(list[i]));
-      }
-      else if(list.length===3){
-        ["A","B","C"].forEach((g,i)=>groups[g].push(list[i]));
-      }
-      else if(list.length===4){
-        shuffle(list);
-        const g=["A","B","C"];
-        shuffle(g);
-        groups[g[0]].push(list[0]);
-        groups[g[1]].push(list[1]);
-        groups[g[2]].push(list[2],list[3]);
-      }
-      else{
-        leftovers.push(...list);
-      }
-    });
-
-    shuffle(leftovers);
-    leftovers.forEach(t=>{
-      const g=["A","B","C"].filter(x=>groups[x].length<MAX);
-      groups[g[Math.floor(Math.random()*g.length)]].push(t);
-    });
-
-    show("groupA",groups.A);
-    show("groupB",groups.B);
-    show("groupC",groups.C);
-
-    document.getElementById("matchBtn").disabled=false;
+  // prefix map (first 2 alphabets)
+  const prefixMap={};
+  teams.forEach(t=>{
+    const prefix=t.substring(0,2).toUpperCase();
+    if(!prefixMap[prefix]) prefixMap[prefix]=[];
+    prefixMap[prefix].push(t);
   });
-}
 
-function show(id,list){
-  const ul=document.getElementById(id);
-  ul.innerHTML="";
-  list.forEach(t=>ul.innerHTML+=`<li>${t}</li>`);
-}
+  let remaining=[];
 
-/* remaining logic unchanged */
-function groupMatches(){
-  make("matchA",groups.A);
-  make("matchB",groups.B);
-  make("matchC",groups.C);
-  document.getElementById("nextBtn").disabled=false;
-}
+  Object.values(prefixMap).forEach(list=>{
+    shuffle(list);
 
-function make(id,list){
-  const t=[...list];shuffle(t);
-  const ul=document.getElementById(id);ul.innerHTML="";
-  for(let i=0;i<t.length;i+=2){
-    ul.innerHTML+=`<li>${t[i]} 🆚 ${t[i+1]}</li>`;
-  }
-}
+    // ===== RULES =====
+    if(list.length===2){
+      const g=pickRandomGroups(2);
+      groups[g[0]].push(list[0]);
+      groups[g[1]].push(list[1]);
+    }
 
-function nextRound(){
-  ["nextA","nextB","nextC"].forEach(id=>{
-    const w=["Winner 1","Winner 2","Winner 3","Winner 4"];
-    shuffle(w);
-    document.getElementById(id).innerHTML=
-      `<li>${w[0]} 🆚 ${w[3]}</li><li>${w[1]} 🆚 ${w[2]}</li>`;
+    else if(list.length===3){
+      ["A","B","C"].forEach((g,i)=>groups[g].push(list[i]));
+    }
+
+    else if(list.length===4){
+      const twoGroups=pickRandomGroups(2);
+      const thirdGroup=["A","B","C"].find(g=>!twoGroups.includes(g));
+
+      groups[twoGroups[0]].push(list[0]);
+      groups[twoGroups[1]].push(list[1]);
+      groups[thirdGroup].push(list[2],list[3]);
+    }
+
+    else{
+      remaining.push(...list);
+    }
   });
-  document.getElementById("superBtn").disabled=false;
+
+  // fill remaining slots safely (8–8–8)
+  shuffle(remaining);
+  remaining.forEach(team=>{
+    const available=["A","B","C"].filter(g=>groups[g].length<MAX);
+    groups[available[Math.floor(Math.random()*available.length)]].push(team);
+  });
+
+  renderGroups();
 }
 
-function superSix(){
-  const six=[
-    "Group A Winner","Group A Runner",
-    "Group B Winner","Group B Runner",
-    "Group C Winner","Group C Runner"
-  ];
-  shuffle(six);
-  show("groupE",six.slice(0,3));
-  show("groupF",six.slice(3));
+function pickRandomGroups(n){
+  const g=["A","B","C"];
+  shuffle(g);
+  return g.slice(0,n);
 }
 
-function exportPDF(){
-  const {jsPDF}=window.jspdf;
-  const pdf=new jsPDF();let y=10;
+function renderGroups(){
   ["A","B","C"].forEach(g=>{
-    pdf.text("Group "+g,10,y);y+=6;
-    groups[g].forEach(t=>{pdf.text("- "+t,12,y);y+=5;});
-    y+=5;
+    const ul=document.getElementById(g);
+    ul.innerHTML="";
+    groups[g].forEach(t=>{
+      ul.innerHTML+=`<li>${t}</li>`;
+    });
   });
-  pdf.save("Tournament_Fixture.pdf");
+
+  console.log(
+    "Group A:",groups.A.length,
+    "Group B:",groups.B.length,
+    "Group C:",groups.C.length
+  );
 }
 </script>
 
