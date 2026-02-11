@@ -81,25 +81,45 @@ button.active{animation:blink 1s infinite}
   <div class="group"><h2>Group C</h2><ul id="groupC"></ul></div>
 </div>
 
-<h2 id="matchSection">🏸 Group Matches</h2>
+<h2 id="matchSection">🏸 Super 24</h2>
 <div class="matches">
   <div class="match-box"><h2>A</h2><ul id="matchA"></ul></div>
   <div class="match-box"><h2>B</h2><ul id="matchB"></ul></div>
   <div class="match-box"><h2>C</h2><ul id="matchC"></ul></div>
 </div>
 
-<h2 id="nextSection">🏆 Next Round</h2>
+<h2 id="nextSection">🏆 Super 12</h2>
 <div class="matches">
   <div class="match-box"><h2>A</h2><ul id="nextA"></ul></div>
   <div class="match-box"><h2>B</h2><ul id="nextB"></ul></div>
   <div class="match-box"><h2>C</h2><ul id="nextC"></ul></div>
 </div>
 
-<h2 id="superSection">🔥 Super Six</h2>
+<h2 id="superSection">🔥 Super Six League</h2>
 <div class="matches">
   <div class="match-box"><h2>Group E</h2><ul id="groupE"></ul></div>
   <div class="match-box"><h2>Group F</h2><ul id="groupF"></ul></div>
 </div>
+
+<h2 id="semiFinalSection">🥇 Semi Final</h2>
+<div class="matches">
+  <div class="match-box">
+    <ul>
+      <li>Group E Top 🆚 Group F 2nd</li>
+      <li>Group F Top 🆚 Group E 2nd</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="finalSection">🏆 Final</h2>
+<div class="matches">
+  <div class="match-box">
+    <ul>
+      <li>Semi Final 1 Winner 🆚 Semi Final 2 Winner</li>
+    </ul>
+  </div>
+</div>
+
 </div>
 
 <div class="button-bar">
@@ -107,12 +127,16 @@ button.active{animation:blink 1s infinite}
   <button id="matchBtn" onclick="groupMatches()" disabled>Group Matches</button>
   <button id="nextBtn" onclick="nextRound()" disabled>Next Round</button>
   <button id="superBtn" onclick="superSix()" disabled>Super Six</button>
+<button onclick="exportPDF()">Export PDF</button>
 </div>
+
 
 <div class="loader" id="loader">
   <div class="shuttle">🏸</div>
   <p id="loaderText">Processing...</p>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 const teamInputs=document.getElementById("teamInputs");
@@ -231,12 +255,46 @@ function nextRound(){
   });
 }
 
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  let y = 10;
+
+  function heading(text){
+    pdf.setFontSize(14);
+    pdf.text(text, 10, y);
+    y += 8;
+  }
+
+  function list(title, items){
+    heading(title);
+    pdf.setFontSize(11);
+    items.forEach(item=>{
+      pdf.text("- " + item, 12, y);
+      y += 6;
+      if(y > 280){
+        pdf.addPage();
+        y = 10;
+      }
+    });
+    y += 4;
+  }
+
+  heading("KAKDWIP SHUTTLE SHOWDOWN 2026");
+
+  list("Group A", groups.A);
+  list("Group B", groups.B);
+  list("Group C", groups.C);
+
+  pdf.save("Tournament_Groups.pdf");
+}
+
 function superSix(){
   showLoader("Super Six...",()=>{
     let six=[
-      "Group A Winner","Group A Runner",
-      "Group B Winner","Group B Runner",
-      "Group C Winner","Group C Runner"
+      "Group A 1st Match Winner","Group A 2nd Match Winner",
+      "Group B 1st Match Winner","Group B 1st Match Winner",
+      "Group C 1st Match Winner","Group C 1st Match Winner"
     ];
     shuffle(six);
     document.getElementById("groupE").innerHTML=
