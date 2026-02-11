@@ -138,6 +138,7 @@ Semi Final 2 Winner</li>
   <p id="loaderText">Processing...</p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
@@ -257,40 +258,41 @@ function nextRound(){
   });
 }
 
+<script>
 function exportPDF(){
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-  let y = 10;
 
-  function heading(text){
-    pdf.setFontSize(14);
-    pdf.text(text, 10, y);
-    y += 8;
-  }
+  html2canvas(document.body, {
+    scale: 2,
+    useCORS: true
+  }).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
 
-  function list(title, items){
-    heading(title);
-    pdf.setFontSize(11);
-    items.forEach(item=>{
-      pdf.text("- " + item, 12, y);
-      y += 6;
-      if(y > 280){
-        pdf.addPage();
-        y = 10;
-      }
-    });
-    y += 4;
-  }
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-  heading("KAKDWIP SHUTTLE SHOWDOWN 2026");
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
 
-  list("Group A", groups.A);
-  list("Group B", groups.B);
-  list("Group C", groups.C);
+    let heightLeft = imgHeight;
+    let position = 0;
 
-  pdf.save("Tournament_Groups.pdf");
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save("Tournament_Full_Screen.pdf");
+  });
 }
-
+</script>
+  
 function superSix(){
   showLoader("Super Six...",()=>{
     let six=[
